@@ -94,11 +94,8 @@ def inference(model,
 
             # Stream results
             im0 = annotator.result()
-            # Save results (image with detections)
             
-            cv2.imwrite('./out.png', im0)
-            print('im0 type', type(im0))
-            return Image.fromarray(im0)
+            return im0
 
 
         # Print time (inference-only)
@@ -107,14 +104,9 @@ def inference(model,
     # Print results
     t = tuple(x.t / seen * 1E3 for x in dt)  # speeds per image
     LOGGER.info(f'Speed: %.1fms pre-process, %.1fms inference, %.1fms NMS per image at shape {(1, 3, *imgsz)}' % t)
-    #if save_txt or save_img:
-    #    s = f"\n{len(list(save_dir.glob('labels/*.txt')))} labels saved to {save_dir / 'labels'}" if save_txt else ''
-    #    LOGGER.info(f"Results saved to {colorstr('bold', save_dir)}{s}")
-    #if update:
-    #    strip_optimizer(weights[0])  # update model (to fix SourceChangeWarning)
 
     if result:
-        print('some result')
+        print('SOME RESULT')
     else:
         print('NONE')
     return result

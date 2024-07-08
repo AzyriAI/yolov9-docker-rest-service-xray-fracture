@@ -1,4 +1,4 @@
 config:
-model: /weights/best.pt
+model: best.pt
 half: False
 
