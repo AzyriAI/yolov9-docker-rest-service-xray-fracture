@@ -90,3 +90,7 @@ You have to options
 ``` shell
 wget http://localhost:3100/v1/fracture/prediction/edf66m4r0tj2rsjmknou.png
 ```
+
+# References
+Yolov9
+https://github.com/WongKinYiu/yolov9
