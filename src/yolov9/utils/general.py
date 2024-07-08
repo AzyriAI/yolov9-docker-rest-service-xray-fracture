@@ -31,9 +31,9 @@ import torch
 import torchvision
 import yaml
 
-from utils import TryExcept, emojis
-from utils.downloads import gsutil_getsize
-from utils.metrics import box_iou, fitness
+from src.yolov9.utils import TryExcept, emojis
+from src.yolov9.utils.downloads import gsutil_getsize
+from src.yolov9.utils.metrics import box_iou, fitness
 
 FILE = Path(__file__).resolve()
 ROOT = FILE.parents[1]  # YOLO root directory
@@ -554,35 +554,6 @@ def check_dataset(data, autodownload=True):
             LOGGER.info(f"Dataset download {s}")
     check_font('Arial.ttf' if is_ascii(data['names']) else 'Arial.Unicode.ttf', progress=True)  # download fonts
     return data  # dictionary
-
-
-def check_amp(model):
-    # Check PyTorch Automatic Mixed Precision (AMP) functionality. Return True on correct operation
-    from models.common import AutoShape, DetectMultiBackend
-
-    def amp_allclose(model, im):
-        # All close FP32 vs AMP results
-        m = AutoShape(model, verbose=False)  # model
-        a = m(im).xywhn[0]  # FP32 inference
-        m.amp = True
-        b = m(im).xywhn[0]  # AMP inference
-        return a.shape == b.shape and torch.allclose(a, b, atol=0.1)  # close to 10% absolute tolerance
-
-    prefix = colorstr('AMP: ')
-    device = next(model.parameters()).device  # get model device
-    if device.type in ('cpu', 'mps'):
-        return False  # AMP only used on CUDA devices
-    f = ROOT / 'data' / 'images' / 'bus.jpg'  # image to check
-    im = f if f.exists() else 'https://ultralytics.com/images/bus.jpg' if check_online() else np.ones((640, 640, 3))
-    try:
-        #assert amp_allclose(deepcopy(model), im) or amp_allclose(DetectMultiBackend('yolo.pt', device), im)
-        LOGGER.info(f'{prefix}checks passed ✅')
-        return True
-    except Exception:
-        help_url = 'https://github.com/ultralytics/yolov5/issues/7908'
-        LOGGER.warning(f'{prefix}checks failed ❌, disabling Automatic Mixed Precision. See {help_url}')
-        return False
-
 
 def yaml_load(file='data.yaml'):
     # Single-line safe yaml loading
