@@ -31,7 +31,6 @@ import torch
 import torchvision
 import yaml
 
-from src.yolov9.utils import TryExcept, emojis
 from src.yolov9.utils.downloads import gsutil_getsize
 from src.yolov9.utils.metrics import box_iou, fitness
 
@@ -134,9 +133,9 @@ def set_logging(name=LOGGING_NAME, verbose=True):
 
 set_logging(LOGGING_NAME)  # run before defining LOGGER
 LOGGER = logging.getLogger(LOGGING_NAME)  # define globally (used in train.py, val.py, detect.py, etc.)
-if platform.system() == 'Windows':
-    for fn in LOGGER.info, LOGGER.warning:
-        setattr(LOGGER, fn.__name__, lambda x: fn(emojis(x)))  # emoji safe logging
+#if platform.system() == 'Windows':
+#    for fn in LOGGER.info, LOGGER.warning:
+#        setattr(LOGGER, fn.__name__, lambda x: fn(emojis(x)))  # emoji safe logging
 
 
 def user_config_dir(dir='Ultralytics', env_var='YOLOV5_CONFIG_DIR'):
@@ -310,102 +309,12 @@ def git_describe(path=ROOT):  # path must be a directory
         return ''
 
 
-@TryExcept()
-@WorkingDirectory(ROOT)
-def check_git_status(repo='WongKinYiu/yolov9', branch='main'):
-    # YOLO status check, recommend 'git pull' if code is out of date
-    url = f'https://github.com/{repo}'
-    msg = f', for updates see {url}'
-    s = colorstr('github: ')  # string
-    assert Path('.git').exists(), s + 'skipping check (not a git repository)' + msg
-    assert check_online(), s + 'skipping check (offline)' + msg
-
-    splits = re.split(pattern=r'\s', string=check_output('git remote -v', shell=True).decode())
-    matches = [repo in s for s in splits]
-    if any(matches):
-        remote = splits[matches.index(True) - 1]
-    else:
-        remote = 'ultralytics'
-        check_output(f'git remote add {remote} {url}', shell=True)
-    check_output(f'git fetch {remote}', shell=True, timeout=5)  # git fetch
-    local_branch = check_output('git rev-parse --abbrev-ref HEAD', shell=True).decode().strip()  # checked out
-    n = int(check_output(f'git rev-list {local_branch}..{remote}/{branch} --count', shell=True))  # commits behind
-    if n > 0:
-        pull = 'git pull' if remote == 'origin' else f'git pull {remote} {branch}'
-        s += f"⚠️ YOLO is out of date by {n} commit{'s' * (n > 1)}. Use `{pull}` or `git clone {url}` to update."
-    else:
-        s += f'up to date with {url} ✅'
-    LOGGER.info(s)
-
-
-@WorkingDirectory(ROOT)
-def check_git_info(path='.'):
-    # YOLO git info check, return {remote, branch, commit}
-    check_requirements('gitpython')
-    import git
-    try:
-        repo = git.Repo(path)
-        remote = repo.remotes.origin.url.replace('.git', '')  # i.e. 'https://github.com/WongKinYiu/yolov9'
-        commit = repo.head.commit.hexsha  # i.e. '3134699c73af83aac2a481435550b968d5792c0d'
-        try:
-            branch = repo.active_branch.name  # i.e. 'main'
-        except TypeError:  # not on any branch
-            branch = None  # i.e. 'detached HEAD' state
-        return {'remote': remote, 'branch': branch, 'commit': commit}
-    except git.exc.InvalidGitRepositoryError:  # path is not a git dir
-        return {'remote': None, 'branch': None, 'commit': None}
-
-
-def check_python(minimum='3.7.0'):
-    # Check current python version vs. required python version
-    check_version(platform.python_version(), minimum, name='Python ', hard=True)
-
-
 def check_version(current='0.0.0', minimum='0.0.0', name='version ', pinned=False, hard=False, verbose=False):
     # Check version vs. required version
     current, minimum = (pkg.parse_version(x) for x in (current, minimum))
     result = (current == minimum) if pinned else (current >= minimum)  # bool
     s = f'WARNING ⚠️ {name}{minimum} is required by YOLO, but {name}{current} is currently installed'  # string
-    if hard:
-        assert result, emojis(s)  # assert min requirements met
-    if verbose and not result:
-        LOGGER.warning(s)
     return result
-
-
-@TryExcept()
-def check_requirements(requirements=ROOT / 'requirements.txt', exclude=(), install=True, cmds=''):
-    # Check installed dependencies meet YOLO requirements (pass *.txt file or list of packages or single package str)
-    prefix = colorstr('red', 'bold', 'requirements:')
-    check_python()  # check python version
-    if isinstance(requirements, Path):  # requirements.txt file
-        file = requirements.resolve()
-        assert file.exists(), f"{prefix} {file} not found, check failed."
-        with file.open() as f:
-            requirements = [f'{x.name}{x.specifier}' for x in pkg.parse_requirements(f) if x.name not in exclude]
-    elif isinstance(requirements, str):
-        requirements = [requirements]
-
-    s = ''
-    n = 0
-    for r in requirements:
-        try:
-            pkg.require(r)
-        except (pkg.VersionConflict, pkg.DistributionNotFound):  # exception if requirements not met
-            s += f'"{r}" '
-            n += 1
-
-    if s and install and AUTOINSTALL:  # check environment variable
-        LOGGER.info(f"{prefix} YOLO requirement{'s' * (n > 1)} {s}not found, attempting AutoUpdate...")
-        try:
-            # assert check_online(), "AutoUpdate skipped (offline)"
-            LOGGER.info(check_output(f'pip install {s} {cmds}', shell=True).decode())
-            source = file if 'file' in locals() else requirements
-            s = f"{prefix} {n} package{'s' * (n > 1)} updated per {source}\n" \
-                f"{prefix} ⚠️ {colorstr('bold', 'Restart runtime or rerun command for updates to take effect')}\n"
-            LOGGER.info(s)
-        except Exception as e:
-            LOGGER.warning(f'{prefix} ❌ {e}')
 
 
 def check_img_size(imgsz, s=32, floor=0):

@@ -5,7 +5,7 @@ from pathlib import Path
 from urllib.error import URLError
 from PIL import Image, ImageDraw, ImageFont
 
-from src.yolov9.utils.general import (CONFIG_DIR, FONT, LOGGER, check_font, check_requirements, clip_boxes, increment_path,
+from src.yolov9.utils.general import (CONFIG_DIR, FONT, LOGGER, check_font, clip_boxes, increment_path,
                            is_ascii, xywh2xyxy, xyxy2xywh)
 
 from src.yolov9.utils.segment.general import scale_image
@@ -40,8 +40,6 @@ def check_pil_font(font=FONT, size=10):
         try:
             check_font(font)
             return ImageFont.truetype(str(font), size)
-        except TypeError:
-            check_requirements('Pillow>=8.4.0')  # known issue https://github.com/ultralytics/yolov5/issues/5374
         except URLError:  # not online
             return ImageFont.load_default()
 

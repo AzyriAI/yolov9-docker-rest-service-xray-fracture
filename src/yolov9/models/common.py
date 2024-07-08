@@ -22,7 +22,6 @@ from IPython.display import display
 from PIL import Image
 from torch.cuda import amp
 
-from src.yolov9.utils import TryExcept
 from src.yolov9.utils.dataloaders import letterbox
 from src.yolov9.utils.general import (LOGGER, ROOT, Profile, colorstr,
                            increment_path, is_notebook,
@@ -804,7 +803,6 @@ class Detections:
                 LOGGER.info(f'Saved results to {save_dir}\n')
             return crops
 
-    @TryExcept('Showing images is not supported in this environment')
     def show(self, labels=True):
         self._run(show=True, labels=labels)  # show results
 

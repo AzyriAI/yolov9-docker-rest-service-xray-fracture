@@ -237,7 +237,7 @@ class End2End(nn.Module):
 
 def attempt_load(weights, device=None, inplace=True, fuse=True):
     # Loads an ensemble of models weights=[a,b,c] or a single model weights=[a] or weights=a
-    from src.ai.models.yolo import Detect
+    from src.yolov9.models.yolo import Detect
 
     model = Ensemble()
     for w in weights if isinstance(weights, list) else [weights]:
